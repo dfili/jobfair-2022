@@ -48,6 +48,15 @@ Handlebars.registerPartial(
   ),
 );
 
+Handlebars.registerPartial(
+  "sprite-sheet-default",
+  readTemplate(
+    "email",
+    "assets",
+    "sprite-sheet",
+  ),
+);
+
 export const Templates = {
   emailRegister: template<{
     content: string[],

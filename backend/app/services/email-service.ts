@@ -1,6 +1,4 @@
-import {
-  resolve,
-} from "node:path";
+import inlineCss from "inline-css";
 import HtmlMinifier from "html-minifier";
 import {
   Attachment as MailerAttachment,
@@ -31,21 +29,7 @@ const sendMail =
         subject: `[Job Fair] ${ subject }`,
         text,
         html,
-        attachments: [
-          {
-            filename: "jobfair-logo.png",
-            path: resolve(
-              __dirname,
-              "../",
-              "templates",
-              "email",
-              "assets",
-              "jobfair-logo.png",
-            ),
-            cid: "jobfair-logo@jobfair.fer.unizg.hr",
-          },
-          ...attachments,
-        ],
+        attachments,
       };
 
       await smtpTransport.sendMail(message);
@@ -59,7 +43,7 @@ const sendMail =
 ;
 
 export class EmailService {
-  public static sendMail<Template extends keyof ITemplates>(
+  public static async sendMail<Template extends keyof ITemplates>(
     subject: string,
     to: string,
     template: {
@@ -70,28 +54,41 @@ export class EmailService {
     return sendMail(
       to,
       subject,
-      this.renderTemplate(
+      await this.renderTemplate(
         template.name,
         template.parameters,
       ),
-      `${ template.parameters.content.join("\n") }\n\nPozdrav,\nJob Fair Tim\nUnska 3, 10000 Zagreb, Hrvatska\ne-mail: jobfair@fer.hr\nweb: jobfair.fer.unizg.hr\nsocial: jobfairfer\n#jobfair22`,
+      `${ template.parameters.content.join("\n") }\n\nPozdrav,\nJob Fair Tim\n\nUnska 3, 10000 Zagreb, Hrvatska\ne-mail: jobfair@fer.hr\nweb: jobfair.fer.unizg.hr\nsocial: jobfairfer`,
     );
   }
 
-  private static renderTemplate<Template extends keyof ITemplates>(
+  private static async renderTemplate<Template extends keyof ITemplates>(
     name: Template,
     parameters: TemplateParameters<Template>,
   ) {
     const rendered = Templates[name](parameters);
+    const inlinedCss = await inlineCss(
+      rendered,
+      {
+        url: "https://jobfair.fer.hr/",
+        preserveMediaQueries: true,
+        applyTableAttributes: true,
+        removeHtmlSelectors: false,
+      },
+    );
 
     return (
       HtmlMinifier.minify(
-        rendered,
+        inlinedCss,
         {
           collapseInlineTagWhitespace: true,
           collapseWhitespace: true,
           removeComments: true,
           removeRedundantAttributes: true,
+          minifyCSS: {
+            level: 2,
+          },
+          sortAttributes: true,
         },
       )
     );
