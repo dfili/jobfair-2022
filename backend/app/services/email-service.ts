@@ -20,9 +20,11 @@ const sendMail =
     html: string,
     text: string,
     attachments: MailerAttachment[] = [],
+    otherOptions: Partial<MailerOptions> = {},
   ): Promise<boolean> => {
     try {
       const message: MailerOptions = {
+        ...otherOptions,
         from: `"${ process.env.EMAIL_FROM_NAME || "Job Fair" }" <${ process.env.EMAIL_FROM || "dontreply-jobfair@fer.hr" }>`,
         replyTo: process.env.EMAIL_REPLY_TO || process.env.EMAIL_FROM || "jobfair@fer.hr",
         to,
@@ -50,6 +52,7 @@ export class EmailService {
       name: Template,
       parameters: TemplateParameters<Template>,
     },
+    otherOptions: Partial<MailerOptions> = {},
   ) {
     return sendMail(
       to,
@@ -59,6 +62,8 @@ export class EmailService {
         template.parameters,
       ),
       `${ template.parameters.content.join("\n") }\n\nPozdrav,\nJob Fair Tim\n\nUnska 3, 10000 Zagreb, Hrvatska\ne-mail: jobfair@fer.hr\nweb: jobfair.fer.unizg.hr\nsocial: jobfairfer`,
+      [],
+      otherOptions,
     );
   }
 
